@@ -10,13 +10,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.measure.converter.MultiplyConverter;
-import javax.measure.converter.UnitConverter;
-import javax.measure.unit.NonSI;
-import javax.measure.unit.SI;
-import javax.measure.unit.Unit;
+import javax.measure.Unit;
+import javax.measure.quantity.Length;
 
 import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.measure.Units;
 import org.apache.sis.referencing.CRS;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -39,7 +37,7 @@ public class TransformVerificationTest
 	private static final double					PRECISION_METER_WGS84		= 1;
 	
 	// approximation for the conversion between radian and metre
-	private static UnitConverter				RADIANS_TO_METER			= new MultiplyConverter(40076592d / (2d * Math.PI));
+	private static Unit<Length>					METRE_PER_RADIAN			= Units.METRE.getSystemUnit().multiply(40076592d / (2d * Math.PI));
 	
 	private static CoordinateReferenceSystem	EPSG_4326;
 	
@@ -120,17 +118,17 @@ public class TransformVerificationTest
 			
 			Unit<?> unit = crsToTest.getCoordinateSystem().getAxis(0).getUnit();
 			double delta = PRECISION_METER_PROJECTED;
-			double wgs84delta = SI.METRE.getConverterToSI().concatenate(RADIANS_TO_METER.inverse())
-					.concatenate(SI.RADIAN.getConverterTo(NonSI.DEGREE_ANGLE)).convert(PRECISION_METER_WGS84);
+			double wgs84delta = Units.METRE.getConverterTo(METRE_PER_RADIAN)
+					.concatenate(Units.RADIAN.getConverterTo(Units.DEGREE)).convert(PRECISION_METER_WGS84);
 			
-			if (unit.isCompatible(SI.RADIAN))
+			if (unit.isCompatible(Units.RADIAN))
 			{
-				delta = SI.METRE.getConverterToSI().concatenate(RADIANS_TO_METER.inverse())
-						.concatenate(SI.RADIAN.getConverterToAny(unit)).convert(PRECISION_METER_WGS84);
+				delta = Units.METRE.getConverterTo(METRE_PER_RADIAN)
+						.concatenate(Units.RADIAN.getConverterToAny(unit)).convert(PRECISION_METER_WGS84);
 			}
 			else
 			{
-				delta = SI.METRE.getConverterToAny(unit).convert(delta);
+				delta = Units.METRE.getConverterToAny(unit).convert(delta);
 			}
 			
 			for (int i = 0; i < wgs84Coordinate.size(); i++)
@@ -143,7 +141,7 @@ public class TransformVerificationTest
 				
 				toWgs84.transform(new DirectPosition2D(transformedCoordinate.get(i)[0], transformedCoordinate.get(i)[1]), toAssert);
 				
-				Assert.assertArrayEquals(coordinateDifferenceMessage(SI.RADIAN, delta),
+				Assert.assertArrayEquals(coordinateDifferenceMessage(Units.RADIAN, delta),
 						wgs84Coordinate.get(i), new double[] { toAssert.getX(), toAssert.getY() }, wgs84delta);
 			}
 			
@@ -165,7 +163,7 @@ public class TransformVerificationTest
 	
 	private static String coordinateDifferenceMessage(Unit<?> unit, double delta)
 	{
-		String unitName = unit.isCompatible(SI.RADIAN) ? "rad" : "m";
+		String unitName = unit.isCompatible(Units.RADIAN) ? "rad" : "m";
 		return String.format("Used delta=%s%s", delta, unitName);
 	}
 }

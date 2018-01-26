@@ -5,8 +5,8 @@ repositories {
 }
 
 dependencies {
-	compile 'org.apache.sis.core:sis-referencing:0.7'
-  	compile 'org.apache.sis.non-free:sis-epsg:0.7'
+	compile 'org.apache.sis.core:sis-referencing:0.8'
+  	compile 'org.apache.sis.non-free:sis-epsg:0.8'
   	compile 'com.google.code.gson:gson:2.8.2'	
   	
     testImplementation 'junit:junit:4.12'
